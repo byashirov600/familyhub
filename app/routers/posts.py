@@ -49,13 +49,12 @@ async def create_post(
     return new_post
 
 
-@router.get("/", response_model=list[PostResponse])
+@router.get("/posts", response_model=list[PostResponse])
 async def get_posts(skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Post).order_by(Post.created_at.desc()).offset(skip).limit(limit)
     )
     return result.scalars().all()
-
 
 @router.get("/{post_id}", response_model=PostResponse)
 async def get_post(post_id: int, db: AsyncSession = Depends(get_db)):

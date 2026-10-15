@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FamilyHub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #555;
+            margin-bottom: 15px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .error {
+            color: #e74c3c;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #27ae60;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+        .hidden {
+            display: none;
+        }
+        a {
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="auth-screen" class="card">
+            <h1>FamilyHub</h1>
+            <h2 id="auth-title">Вход</h2>
+            <input type="text" id="username" placeholder="Имя пользователя">
+            <input type="password" id="password" placeholder="Пароль">
+            <div id="auth-message"></div>
+            <button class="btn" id="auth-btn" onclick="handleAuth()">Войти</button>
+            <p style="margin-top:15px; text-align:center;">
+                <a onclick="toggleAuth()" id="auth-toggle">Нет аккаунта? Зарегистрироваться</a>
+            </p>
+        </div>
+
+        <div id="main-screen" class="card hidden">
+            <h1>FamilyHub</h1>
+            <p>Добро пожаловать, <span id="current-user"></span>!</p>
+            <button class="btn" onclick="logout()">Выйти</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        let isLogin = true;
+        let token = localStorage.getItem('familyhub_token');
+
+        if (token) {
+            showMainScreen();
+        }
+
+        function toggleAuth() {
+            isLogin = !isLogin;
+            document.getElementById('auth-title').textContent = isLogin ? 'Вход' : 'Регистрация';
+            document.getElementById('auth-btn').textContent = isLogin ? 'Войти' : 'Зарегистрироваться';
+            document.getElementById('auth-toggle').textContent = isLogin
+                ? 'Нет аккаунта? Зарегистрироваться'
+                : 'Уже есть аккаунт? Войти';
+            document.getElementById('auth-message').textContent = '';
+        }
+
+        function formatError(data) {
+            if (!data) return 'Неизвестная ошибка';
+            if (typeof data.detail === 'string') return data.detail;
+            if (Array.isArray(data.detail)) {
+                return data.detail.map(function(e) {
+                    if (e.msg) return e.msg;
+                    return JSON.stringify(e);
+                }).join('; ');
+            }
+            if (data.detail) return JSON.stringify(data.detail);
+            return 'Ошибка';
+        }
+
+        async function handleAuth() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const msg = document.getElementById('auth-message');
+
+            if (!username || !password) {
+                msg.innerHTML = '<div class="error">Заполните все поля</div>';
+                return;
+            }
+
+            const endpoint = isLogin ? '/auth/login' : '/auth/register';
+
+            try {
+                let res;
+
+                if (isLogin) {
+                    const formData = new FormData();
+                    formData.append('username', username);
+                    formData.append('password', password);
+
+                    res = await fetch(API_URL + endpoint, {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else {
+                    res = await fetch(API_URL + endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            email: username + '@familyhub.com',
+                            password: password
+                        })
+                    });
+                }
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    if (data.access_token) {
+                        token = data.access_token;
+                        localStorage.setItem('familyhub_token', token);
+                        localStorage.setItem('familyhub_user', username);
+                        showMainScreen();
+                    } else {
+                        msg.innerHTML = '<div class="success">Регистрация успешна! Теперь войдите.</div>';
+                        if (!isLogin) {
+                            setTimeout(function() { toggleAuth(); }, 1500);
+                        }
+                    }
+                } else {
+                    msg.innerHTML = '<div class="error">' + formatError(data) + '</div>';
+                }
+            } catch (e) {
+                msg.innerHTML = '<div class="error">Ошибка соединения: ' + e.message + '</div>';
+            }
+        }
+
+        function showMainScreen() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-screen').classList.remove('hidden');
+            document.getElementById('current-user').textContent = localStorage.getItem('familyhub_user') || 'Пользователь';
+        }
+
+        function logout() {
+            localStorage.removeItem('familyhub_token');
+            localStorage.removeItem('familyhub_user');
+            token = null;
+            location.reload();
+        }
+    </script>
+</body>
+</html>
