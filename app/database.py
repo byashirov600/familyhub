@@ -6,14 +6,15 @@ from app.config import settings
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
-    pool_pre_ping=True  # Проверяет соединение перед использованием
+    pool_pre_ping=True
 )
 
 AsyncSessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=engine,
-    class_=AsyncSession
+    class_=AsyncSession,
+    expire_on_commit=False  # ← ЭТО КЛЮЧЕВОЙ ПАРАМЕТР!
 )
 
 Base = declarative_base()

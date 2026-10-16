@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from app.database import engine, Base
-from app.routers import auth, users, posts, comments, likes
+from app.routers import auth, users, posts, comments, likes, messages
 
 async def init_db():
     async with engine.begin() as conn:
@@ -20,6 +20,7 @@ app.include_router(users.router, prefix="/api")
 app.include_router(posts.router, prefix="/api")
 app.include_router(comments.router, prefix="/api")
 app.include_router(likes.router, prefix="/api")
+app.include_router(messages.router, prefix="/api")
 
 # Раздаём папку uploads (для картинок постов)
 uploads_path = Path(__file__).parent.parent / "uploads"
