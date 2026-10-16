@@ -5,6 +5,11 @@ from typing import Optional
 class MessageCreate(BaseModel):
     receiver_id: int
     text: str
+    attachment_path: Optional[str] = None
+
+
+class MessageUpdate(BaseModel):
+    text: str
 
 
 class MessageResponse(BaseModel):
@@ -12,8 +17,10 @@ class MessageResponse(BaseModel):
     sender_id: int
     receiver_id: int
     text: str
+    attachment_path: Optional[str] = None
     is_read: bool = False
     created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
     class Config:
         from_attributes = True

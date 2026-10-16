@@ -1,24 +1,37 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, and_, update, text
+import os
+import shutil
+from pathlib import Path
 from app.database import get_db
 from app.models.message import Message
 from app.models.user import User
-from app.schemas.message import MessageCreate
+from app.schemas.message import MessageCreate, MessageUpdate
 from app.routers.users import get_current_user
 
 router = APIRouter(prefix="/messages", tags=["messages"])
 
+# Папка для вложений
+ATTACHMENTS_DIR = Path("uploads/messages")
+ATTACHMENTS_DIR.mkdir(parents=True, exist_ok=True)
+
 
 @router.post("/send", status_code=201)
 async def send_message(
-        data: MessageCreate,
+        receiver_id: int,
+        text: str = Form(""),
+        attachment: UploadFile = File(None),
         db: AsyncSession = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
     """Отправить сообщение пользователю"""
 
-    result = await db.execute(select(User).where(User.id == data.receiver_id))
+    # Если нет ни текста, ни файла — ошибка
+    if not text and not attachment:
+        raise HTTPException(status_code=400, detail="Сообщение не может быть пустым")
+
+    result = await db.execute(select(User).where(User.id == receiver_id))
     receiver = result.scalar_one_or_none()
 
     if not receiver:
@@ -27,16 +40,28 @@ async def send_message(
     if receiver.id == current_user.id:
         raise HTTPException(status_code=400, detail="Нельзя отправить сообщение себе")
 
-    # Используем insert вместо ORM
+    attachment_path = None
+    if attachment:
+        file_extension = os.path.splitext(attachment.filename)[1]
+        filename = f"msg_{current_user.id}_{receiver_id}_{int(__import__('time').time())}{file_extension}"
+        attachment_path = str(ATTACHMENTS_DIR / filename)
+
+        with open(attachment_path, "wb") as buffer:
+            shutil.copyfileobj(attachment.file, buffer)
+
+    # Если текст пустой, но есть файл — используем имя файла
+    if not text and attachment:
+        text = f"📎 {attachment.filename}"
+
     stmt = Message.__table__.insert().values(
         sender_id=current_user.id,
-        receiver_id=data.receiver_id,
-        text=data.text
+        receiver_id=receiver_id,
+        text=text,
+        attachment_path=attachment_path
     )
     result = await db.execute(stmt)
     await db.commit()
 
-    # Получаем созданное сообщение
     msg_id = result.inserted_primary_key[0]
     result = await db.execute(
         select(
@@ -44,8 +69,10 @@ async def send_message(
             Message.sender_id,
             Message.receiver_id,
             Message.text,
+            Message.attachment_path,
             Message.is_read,
-            Message.created_at
+            Message.created_at,
+            Message.updated_at
         ).where(Message.id == msg_id)
     )
     msg = result.first()
@@ -55,9 +82,68 @@ async def send_message(
         "sender_id": msg.sender_id,
         "receiver_id": msg.receiver_id,
         "text": msg.text,
+        "attachment_path": msg.attachment_path,
         "is_read": bool(msg.is_read) if msg.is_read is not None else False,
-        "created_at": msg.created_at.isoformat() if msg.created_at else None
+        "created_at": msg.created_at.isoformat() if msg.created_at else None,
+        "updated_at": msg.updated_at.isoformat() if msg.updated_at else None
     }
+
+
+@router.put("/{message_id}")
+async def update_message(
+        message_id: int,
+        data: MessageUpdate,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    """Редактировать сообщение"""
+
+    result = await db.execute(select(Message).where(Message.id == message_id))
+    message = result.scalar_one_or_none()
+
+    if not message:
+        raise HTTPException(status_code=404, detail="Сообщение не найдено")
+
+    if message.sender_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Можно редактировать только свои сообщения")
+
+    await db.execute(
+        update(Message)
+        .where(Message.id == message_id)
+        .values(text=data.text)
+    )
+    await db.commit()
+
+    return {"message": "Сообщение обновлено"}
+
+
+@router.delete("/{message_id}")
+async def delete_message(
+        message_id: int,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    """Удалить сообщение"""
+
+    result = await db.execute(select(Message).where(Message.id == message_id))
+    message = result.scalar_one_or_none()
+
+    if not message:
+        raise HTTPException(status_code=404, detail="Сообщение не найдено")
+
+    if message.sender_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Можно удалять только свои сообщения")
+
+    # Удаляем файл вложения если есть
+    if message.attachment_path and os.path.exists(message.attachment_path):
+        os.remove(message.attachment_path)
+
+    await db.execute(
+        Message.__table__.delete().where(Message.id == message_id)
+    )
+    await db.commit()
+
+    return {"message": "Сообщение удалено"}
 
 
 @router.get("/chats")
@@ -67,7 +153,6 @@ async def get_chats(
 ):
     """Получить список чатов"""
 
-    # Явно выбираем колонки
     result = await db.execute(
         select(
             Message.sender_id,
@@ -133,14 +218,12 @@ async def get_chat_history(
 ):
     """Получить историю переписки с пользователем"""
 
-    # Проверяем существование пользователя
     result = await db.execute(select(User.id, User.username).where(User.id == user_id))
     other_user = result.first()
 
     if not other_user:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
 
-    # Помечаем все непрочитанные сообщения как прочитанные
     await db.execute(
         update(Message)
         .where(
@@ -154,15 +237,16 @@ async def get_chat_history(
     )
     await db.commit()
 
-    # Явно выбираем колонки
     result = await db.execute(
         select(
             Message.id,
             Message.sender_id,
             Message.receiver_id,
             Message.text,
+            Message.attachment_path,
             Message.is_read,
-            Message.created_at
+            Message.created_at,
+            Message.updated_at
         ).where(
             or_(
                 and_(Message.sender_id == current_user.id, Message.receiver_id == user_id),
@@ -182,13 +266,22 @@ async def get_chat_history(
             else:
                 created_at_str = str(row.created_at)
 
+        updated_at_str = None
+        if row.updated_at:
+            if hasattr(row.updated_at, 'isoformat'):
+                updated_at_str = row.updated_at.isoformat()
+            else:
+                updated_at_str = str(row.updated_at)
+
         result_list.append({
             "id": row.id,
             "sender_id": row.sender_id,
             "receiver_id": row.receiver_id,
             "text": row.text,
+            "attachment_path": row.attachment_path,
             "is_read": bool(row.is_read) if row.is_read is not None else False,
-            "created_at": created_at_str
+            "created_at": created_at_str,
+            "updated_at": updated_at_str
         })
 
     return result_list
