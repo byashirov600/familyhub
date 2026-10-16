@@ -5,82 +5,722 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FamilyHub</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --sidebar-bg: rgba(255, 255, 255, 0.98);
+            --content-bg: rgba(245, 245, 245, 0.9);
+            --text-primary: #000;
+            --text-secondary: #999;
+            --card-bg: white;
+            --border-color: #e0e0e0;
+            --accent-color: #2AABEE;
+            --accent-hover: #229ED9;
         }
+
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --sidebar-bg: rgba(30, 30, 40, 0.98);
+            --content-bg: rgba(20, 20, 30, 0.9);
+            --text-primary: #fff;
+            --text-secondary: #aaa;
+            --card-bg: #2a2a3a;
+            --border-color: #3a3a4a;
+            --accent-color: #4a9eff;
+            --accent-hover: #3a8eef;
+        }
+
+        [data-theme="blue"] {
+            --bg-gradient: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+            --sidebar-bg: rgba(255, 255, 255, 0.98);
+            --content-bg: rgba(240, 248, 255, 0.9);
+            --text-primary: #000;
+            --text-secondary: #666;
+            --card-bg: white;
+            --border-color: #d0e0f0;
+            --accent-color: #2193b0;
+            --accent-hover: #1a7a95;
+        }
+
+        [data-theme="green"] {
+            --bg-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --sidebar-bg: rgba(255, 255, 255, 0.98);
+            --content-bg: rgba(240, 255, 245, 0.9);
+            --text-primary: #000;
+            --text-secondary: #666;
+            --card-bg: white;
+            --border-color: #d0f0e0;
+            --accent-color: #11998e;
+            --accent-hover: #0e8077;
+        }
+
+        [data-theme="red"] {
+            --bg-gradient: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            --sidebar-bg: rgba(255, 255, 255, 0.98);
+            --content-bg: rgba(255, 245, 245, 0.9);
+            --text-primary: #000;
+            --text-secondary: #666;
+            --card-bg: white;
+            --border-color: #f0d0d0;
+            --accent-color: #eb3349;
+            --accent-hover: #d42a3f;
+        }
+
+        [data-theme="orange"] {
+            --bg-gradient: linear-gradient(135deg, #f09819 0%, #edde5d 100%);
+            --sidebar-bg: rgba(255, 255, 255, 0.98);
+            --content-bg: rgba(255, 250, 240, 0.9);
+            --text-primary: #000;
+            --text-secondary: #666;
+            --card-bg: white;
+            --border-color: #f0e0c0;
+            --accent-color: #f09819;
+            --accent-hover: #d98815;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-gradient);
             min-height: 100vh;
+            transition: background 0.3s ease;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1000;
+            background: var(--accent-color);
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .hamburger-btn.active span:nth-child(2) { opacity: 0; }
+        .hamburger-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 320px;
+            height: 100vh;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            transition: left 0.3s ease;
+            z-index: 999;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar.open { left: 0; }
+
+        .sidebar-header {
+            padding: 20px 15px 15px;
+            background: var(--accent-color);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 60px;
+        }
+
+        .sidebar-header h1 { font-size: 18px; font-weight: 500; }
+
+        .sidebar-header button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .sidebar-header button:hover { background: rgba(255,255,255,0.3); }
+
+        .sidebar-menu {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-menu-top { flex: 1; }
+        .sidebar-menu-bottom { border-top: 1px solid var(--border-color); }
+
+        .menu-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s;
+        }
+
+        .menu-item:hover { background: rgba(0,0,0,0.05); }
+        .menu-item.active { background: rgba(42, 171, 238, 0.1); }
+
+        .menu-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-color);
             display: flex;
             align-items: center;
             justify-content: center;
+            color: white;
+            font-size: 18px;
+            flex-shrink: 0;
         }
-        .container {
-            max-width: 500px;
+
+        .menu-text { flex: 1; }
+        .menu-title { font-weight: 500; color: var(--text-primary); margin-bottom: 3px; }
+        .menu-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 998;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .overlay.active { opacity: 1; visibility: visible; }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--content-bg);
+            backdrop-filter: blur(10px);
+            min-height: 0;
+            transition: background 0.3s ease;
+            width: 100%;
+        }
+
+        .content-header {
+            padding: 15px 20px 15px 70px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .content-header h2 { font-size: 16px; color: var(--text-primary); }
+
+        .content-body {
+            flex: 1;
+            overflow-y: auto;
             padding: 20px;
+            min-height: 0;
+            display: flex;
+            justify-content: center;
         }
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        h2 {
-            color: #555;
+
+        .content-inner { width: 100%; max-width: 700px; }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .post {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
             margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            transition: background 0.3s ease;
         }
-        input, textarea {
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .post-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .post-author-info { flex: 1; }
+        .post-author { font-weight: 500; color: var(--text-primary); font-size: 14px; }
+        .post-date { font-size: 12px; color: var(--text-secondary); }
+        .post-title { font-size: 15px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px; }
+        .post-content { font-size: 14px; color: var(--text-primary); line-height: 1.5; white-space: pre-wrap; margin-bottom: 12px; }
+
+        .post-image {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            display: block;
+        }
+
+        .post-image:hover { opacity: 0.9; transform: scale(1.01); }
+
+        .post-actions {
+            display: flex;
+            gap: 15px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover { background: rgba(0,0,0,0.05); color: var(--accent-color); }
+        .action-btn.liked { color: #e74c3c; }
+
+        .action-btn.edit-btn:hover { color: #f39c12; }
+        .action-btn.delete-btn:hover { color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+
+        .create-post-form {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            transition: background 0.3s ease;
+        }
+
+        .create-post-form input,
+        .create-post-form textarea {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
+            padding: 10px;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
-            margin: 8px 0;
+            margin-bottom: 10px;
+            font-family: inherit;
             font-size: 14px;
+            background: var(--card-bg);
+            color: var(--text-primary);
         }
-        .btn {
-            background: #667eea;
+
+        .create-post-form textarea { resize: vertical; min-height: 80px; }
+
+        .create-post-form .btn {
+            background: var(--accent-color);
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .create-post-form .btn:hover { background: var(--accent-hover); }
+
+        .comments-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .comment { display: flex; gap: 10px; margin-bottom: 12px; }
+
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+            background: var(--content-bg);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .comment-author { font-weight: 500; font-size: 13px; color: var(--text-primary); margin-bottom: 3px; }
+        .comment-text { font-size: 13px; color: var(--text-primary); }
+        .comment-date { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+
+        .comment-form { display: flex; gap: 10px; margin-top: 12px; }
+
+        .comment-form input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 13px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        .comment-form button {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .profile-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .profile-avatar-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            margin: 0 auto 15px;
+        }
+
+        .profile-name { font-size: 20px; font-weight: 500; color: var(--text-primary); margin-bottom: 5px; }
+        .profile-username { font-size: 14px; color: var(--text-secondary); }
+
+        .auth-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .auth-card h1 { text-align: center; color: var(--accent-color); margin-bottom: 20px; font-size: 24px; }
+        .auth-card h2 { color: var(--text-primary); margin-bottom: 15px; font-size: 18px; }
+
+        .auth-card input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        .auth-card .btn {
+            width: 100%;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
             margin-top: 10px;
         }
-        .btn:hover {
-            background: #5568d3;
+
+        .auth-card .btn:hover { background: var(--accent-hover); }
+        .auth-card a { color: var(--accent-color); cursor: pointer; text-decoration: none; font-size: 14px; }
+        .auth-card a:hover { text-decoration: underline; }
+
+        .error { color: #e74c3c; font-size: 13px; margin: 10px 0; }
+        .success { color: #4bb34b; font-size: 13px; margin: 10px 0; }
+        .empty-state { text-align: center; color: var(--text-secondary); padding: 40px 20px; }
+        .hidden { display: none !important; }
+
+        .settings-section {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
         }
-        .error {
-            color: #e74c3c;
-            font-size: 13px;
-            margin: 10px 0;
+
+        .settings-section h3 { color: var(--text-primary); margin-bottom: 15px; font-size: 16px; }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
         }
-        .success {
-            color: #27ae60;
-            font-size: 13px;
-            margin: 10px 0;
-        }
-        .hidden {
-            display: none;
-        }
-        a {
-            color: #667eea;
+
+        .theme-card {
+            border-radius: 8px;
+            padding: 15px;
             cursor: pointer;
-            text-decoration: underline;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            text-align: center;
         }
+
+        .theme-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .theme-card.active { border-color: var(--accent-color); }
+
+        .theme-preview { height: 80px; border-radius: 6px; margin-bottom: 10px; }
+        .theme-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+
+        .theme-default { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .theme-dark { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+        .theme-blue { background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%); }
+        .theme-green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .theme-red { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); }
+        .theme-orange { background: linear-gradient(135deg, #f09819 0%, #edde5d 100%); }
+
+        .content-body::-webkit-scrollbar { width: 8px; }
+        .content-body::-webkit-scrollbar-track { background: transparent; }
+        .content-body::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        .content-body::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
+
+        /* ===== LIGHTBOX ===== */
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .lightbox.active { display: flex; opacity: 1; }
+
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            z-index: 10001;
+        }
+
+        .lightbox-close:hover { background: rgba(255, 255, 255, 0.3); }
+
+        .lightbox-img {
+            max-width: 90%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .lightbox-caption {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 14px;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 16px;
+            border-radius: 20px;
+            max-width: 80%;
+            text-align: center;
+        }
+
+        /* ===== МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal h3 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .modal input,
+        .modal textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        .modal textarea { resize: vertical; min-height: 100px; }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+
+        .modal-actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .modal-actions .btn-save {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .modal-actions .btn-save:hover { background: var(--accent-hover); }
+
+        .modal-actions .btn-cancel {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .modal-actions .btn-cancel:hover { background: #ccc; }
+
+        /* Подтверждение удаления */
+        .confirm-dialog {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .confirm-dialog h3 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .confirm-dialog p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .confirm-dialog .modal-actions {
+            justify-content: center;
+        }
+
+        .confirm-dialog .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .confirm-dialog .btn-delete:hover { background: #c0392b; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="auth-screen" class="card">
+    <!-- Экран авторизации -->
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-card">
             <h1>FamilyHub</h1>
             <h2 id="auth-title">Вход</h2>
             <input type="text" id="username" placeholder="Имя пользователя">
@@ -91,11 +731,205 @@
                 <a onclick="toggleAuth()" id="auth-toggle">Нет аккаунта? Зарегистрироваться</a>
             </p>
         </div>
+    </div>
 
-        <div id="main-screen" class="card hidden">
-            <h1>FamilyHub</h1>
-            <p>Добро пожаловать, <span id="current-user"></span>!</p>
-            <button class="btn" onclick="logout()">Выйти</button>
+    <!-- Главное приложение -->
+    <div id="main-app" class="app-container hidden">
+        <!-- Кнопка-гамбургер -->
+        <button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <!-- Overlay -->
+        <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+        <!-- Левая панель -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>FamilyHub</h1>
+                <button onclick="logout()">Выйти</button>
+            </div>
+            <div class="sidebar-menu">
+                <div class="sidebar-menu-top">
+                    <div class="menu-item" onclick="showPage('profile', this)">
+                        <div class="menu-icon">👤</div>
+                        <div class="menu-text">
+                            <div class="menu-title">Моя страница</div>
+                            <div class="menu-subtitle" id="sidebar-username">@user</div>
+                        </div>
+                    </div>
+                    <div class="menu-item" onclick="showPage('messages', this)">
+                        <div class="menu-icon">💬</div>
+                        <div class="menu-text">
+                            <div class="menu-title">Сообщения</div>
+                            <div class="menu-subtitle">В разработке</div>
+                        </div>
+                    </div>
+                    <div class="menu-item active" onclick="showPage('feed', this)">
+                        <div class="menu-icon">📰</div>
+                        <div class="menu-text">
+                            <div class="menu-title">Лента новостей</div>
+                            <div class="menu-subtitle">Все публикации</div>
+                        </div>
+                    </div>
+                    <div class="menu-item" onclick="showPage('friends', this)">
+                        <div class="menu-icon">👥</div>
+                        <div class="menu-text">
+                            <div class="menu-title">Друзья</div>
+                            <div class="menu-subtitle">В разработке</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar-menu-bottom">
+                    <div class="menu-item" onclick="showPage('settings', this)">
+                        <div class="menu-icon">⚙️</div>
+                        <div class="menu-text">
+                            <div class="menu-title">Настройки</div>
+                            <div class="menu-subtitle">Оформление</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Основная область -->
+        <div class="main-content">
+            <!-- Страница профиля -->
+            <div id="page-profile" class="page">
+                <div class="content-header">
+                    <h2>Моя страница</h2>
+                </div>
+                <div class="content-body">
+                    <div class="content-inner">
+                        <div class="profile-card">
+                            <div class="profile-avatar-large" id="profile-avatar">?</div>
+                            <div class="profile-name" id="profile-name">Пользователь</div>
+                            <div class="profile-username" id="profile-username">@username</div>
+                        </div>
+                        <div class="card">
+                            <h3 style="margin-bottom: 15px; color: var(--text-primary);">Мои публикации</h3>
+                            <div id="my-posts"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Страница сообщений -->
+            <div id="page-messages" class="page">
+                <div class="content-header">
+                    <h2>Сообщения</h2>
+                </div>
+                <div class="content-body">
+                    <div class="content-inner">
+                        <div class="empty-state">Раздел в разработке </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Страница ленты новостей -->
+            <div id="page-feed" class="page active">
+                <div class="content-header">
+                    <h2>Лента новостей</h2>
+                </div>
+                <div class="content-body">
+                    <div class="content-inner">
+                        <div class="create-post-form">
+                            <input type="text" id="post-title" placeholder="Заголовок новости">
+                            <textarea id="post-content" placeholder="Что нового?"></textarea>
+                            <input type="file" id="post-image" accept="image/*">
+                            <div id="post-message"></div>
+                            <button class="btn" onclick="createPost()">Опубликовать</button>
+                        </div>
+                        <div id="posts-feed"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Страница друзей -->
+            <div id="page-friends" class="page">
+                <div class="content-header">
+                    <h2>Друзья</h2>
+                </div>
+                <div class="content-body">
+                    <div class="content-inner">
+                        <div class="empty-state">Раздел в разработке 🚧</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Страница настроек -->
+            <div id="page-settings" class="page">
+                <div class="content-header">
+                    <h2>Настройки</h2>
+                </div>
+                <div class="content-body">
+                    <div class="content-inner">
+                        <div class="settings-section">
+                            <h3>🎨 Тема оформления</h3>
+                            <div class="theme-grid">
+                                <div class="theme-card" onclick="setTheme('default')">
+                                    <div class="theme-preview theme-default"></div>
+                                    <div class="theme-name">Фиолетовая</div>
+                                </div>
+                                <div class="theme-card" onclick="setTheme('dark')">
+                                    <div class="theme-preview theme-dark"></div>
+                                    <div class="theme-name">Тёмная</div>
+                                </div>
+                                <div class="theme-card" onclick="setTheme('blue')">
+                                    <div class="theme-preview theme-blue"></div>
+                                    <div class="theme-name">Синяя</div>
+                                </div>
+                                <div class="theme-card" onclick="setTheme('green')">
+                                    <div class="theme-preview theme-green"></div>
+                                    <div class="theme-name">Зелёная</div>
+                                </div>
+                                <div class="theme-card" onclick="setTheme('red')">
+                                    <div class="theme-preview theme-red"></div>
+                                    <div class="theme-name">Красная</div>
+                                </div>
+                                <div class="theme-card" onclick="setTheme('orange')">
+                                    <div class="theme-preview theme-orange"></div>
+                                    <div class="theme-name">Оранжевая</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== LIGHTBOX ===== -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+        <button class="lightbox-close" onclick="closeLightbox(event)">✕</button>
+        <img class="lightbox-img" id="lightbox-img" src="" alt="Просмотр">
+        <div class="lightbox-caption" id="lightbox-caption"></div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ===== -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal">
+            <h3>✏️ Редактировать пост</h3>
+            <input type="text" id="edit-title" placeholder="Заголовок">
+            <textarea id="edit-content" placeholder="Текст поста"></textarea>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeEditModal()">Отмена</button>
+                <button class="btn-save" onclick="saveEdit()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ДИАЛОГ ПОДТВЕРЖДЕНИЯ УДАЛЕНИЯ ===== -->
+    <div class="modal-overlay" id="delete-modal">
+        <div class="confirm-dialog">
+            <h3>️ Удалить пост?</h3>
+            <p>Это действие нельзя отменить. Пост будет удалён навсегда.</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeDeleteModal()">Отмена</button>
+                <button class="btn-delete" onclick="confirmDelete()">Удалить</button>
+            </div>
         </div>
     </div>
 
@@ -103,9 +937,146 @@
         const API_URL = '/api';
         let isLogin = true;
         let token = localStorage.getItem('familyhub_token');
+        let currentUser = localStorage.getItem('familyhub_user');
+
+        let editingPostId = null;
+        let deletingPostId = null;
+
+        const savedTheme = localStorage.getItem('familyhub_theme') || 'default';
+        setTheme(savedTheme, false);
 
         if (token) {
-            showMainScreen();
+            showMainApp();
+        }
+
+        // ===== БОКОВОЕ МЕНЮ =====
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('overlay').classList.toggle('active');
+            document.getElementById('hamburger-btn').classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('hamburger-btn').classList.remove('active');
+        }
+
+        // ===== LIGHTBOX =====
+
+        function openLightbox(imageSrc, caption) {
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            const captionEl = document.getElementById('lightbox-caption');
+
+            img.src = imageSrc;
+            captionEl.textContent = caption || '';
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox(event) {
+            if (event.target.id === 'lightbox' ||
+                event.target.classList.contains('lightbox-close') ||
+                event.target.classList.contains('lightbox-img') === false && event.target.id !== 'lightbox-img') {
+                const lightbox = document.getElementById('lightbox');
+                lightbox.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const lightbox = document.getElementById('lightbox');
+                if (lightbox.classList.contains('active')) {
+                    lightbox.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+                closeEditModal();
+                closeDeleteModal();
+            }
+        });
+
+        // ===== МОДАЛЬНЫЕ ОКНА =====
+
+        function openEditModal(postId, title, content) {
+            editingPostId = postId;
+            document.getElementById('edit-title').value = title;
+            document.getElementById('edit-content').value = content;
+            document.getElementById('edit-modal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+            editingPostId = null;
+        }
+
+        function openDeleteModal(postId) {
+            deletingPostId = postId;
+            document.getElementById('delete-modal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.remove('active');
+            deletingPostId = null;
+        }
+
+        async function saveEdit() {
+            const title = document.getElementById('edit-title').value.trim();
+            const content = document.getElementById('edit-content').value.trim();
+
+            if (!title || !content) {
+                alert('Заполните заголовок и текст');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('content', content);
+
+                const res = await fetch(API_URL + '/posts/' + editingPostId, {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+
+                if (res.ok) {
+                    closeEditModal();
+                    loadPosts();
+                    if (document.getElementById('page-profile').classList.contains('active')) {
+                        loadMyPosts();
+                    }
+                } else {
+                    const data = await res.json();
+                    alert(formatError(data));
+                }
+            } catch (e) {
+                alert('Ошибка: ' + e.message);
+            }
+        }
+
+        async function confirmDelete() {
+            try {
+                const res = await fetch(API_URL + '/posts/' + deletingPostId, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (res.ok || res.status === 204) {
+                    closeDeleteModal();
+                    loadPosts();
+                    if (document.getElementById('page-profile').classList.contains('active')) {
+                        loadMyPosts();
+                    }
+                } else {
+                    const data = await res.json();
+                    alert(formatError(data));
+                }
+            } catch (e) {
+                alert('Ошибка: ' + e.message);
+            }
         }
 
         function toggleAuth() {
@@ -145,23 +1116,15 @@
 
             try {
                 let res;
-
                 if (isLogin) {
                     const formData = new FormData();
                     formData.append('username', username);
                     formData.append('password', password);
-
-                    res = await fetch(API_URL + endpoint, {
-                        method: 'POST',
-                        body: formData
-                    });
+                    res = await fetch(API_URL + endpoint, { method: 'POST', body: formData });
                 } else {
                     res = await fetch(API_URL + endpoint, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             username: username,
                             email: username + '@familyhub.com',
@@ -175,14 +1138,13 @@
                 if (res.ok) {
                     if (data.access_token) {
                         token = data.access_token;
+                        currentUser = username;
                         localStorage.setItem('familyhub_token', token);
                         localStorage.setItem('familyhub_user', username);
-                        showMainScreen();
+                        showMainApp();
                     } else {
                         msg.innerHTML = '<div class="success">Регистрация успешна! Теперь войдите.</div>';
-                        if (!isLogin) {
-                            setTimeout(function() { toggleAuth(); }, 1500);
-                        }
+                        if (!isLogin) setTimeout(function() { toggleAuth(); }, 1500);
                     }
                 } else {
                     msg.innerHTML = '<div class="error">' + formatError(data) + '</div>';
@@ -192,17 +1154,303 @@
             }
         }
 
-        function showMainScreen() {
+        function showMainApp() {
             document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('main-screen').classList.remove('hidden');
-            document.getElementById('current-user').textContent = localStorage.getItem('familyhub_user') || 'Пользователь';
+            document.getElementById('main-app').classList.remove('hidden');
+
+            document.getElementById('sidebar-username').textContent = '@' + (currentUser || 'user');
+            document.getElementById('profile-name').textContent = currentUser || 'Пользователь';
+            document.getElementById('profile-username').textContent = '@' + (currentUser || 'user');
+            document.getElementById('profile-avatar').textContent = (currentUser || 'U')[0].toUpperCase();
+
+            showPage('feed', document.querySelector('.menu-item.active'));
+        }
+
+        function showPage(pageName, element) {
+            document.querySelectorAll('.page').forEach(function(page) {
+                page.classList.remove('active');
+            });
+
+            document.querySelectorAll('.menu-item').forEach(function(item) {
+                item.classList.remove('active');
+            });
+
+            document.getElementById('page-' + pageName).classList.add('active');
+            if (element) element.classList.add('active');
+
+            closeSidebar();
+
+            if (pageName === 'feed') {
+                loadPosts();
+            } else if (pageName === 'profile') {
+                loadMyPosts();
+            } else if (pageName === 'settings') {
+                updateThemeSelection();
+            }
         }
 
         function logout() {
             localStorage.removeItem('familyhub_token');
             localStorage.removeItem('familyhub_user');
             token = null;
+            currentUser = null;
             location.reload();
+        }
+
+        function setTheme(themeName, save = true) {
+            document.documentElement.setAttribute('data-theme', themeName);
+            if (save) {
+                localStorage.setItem('familyhub_theme', themeName);
+            }
+            updateThemeSelection();
+        }
+
+        function updateThemeSelection() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'default';
+            document.querySelectorAll('.theme-card').forEach(function(card) {
+                card.classList.remove('active');
+            });
+
+            const themes = ['default', 'dark', 'blue', 'green', 'red', 'orange'];
+            const currentIndex = themes.indexOf(currentTheme);
+            if (currentIndex >= 0) {
+                const cards = document.querySelectorAll('.theme-card');
+                if (cards[currentIndex]) {
+                    cards[currentIndex].classList.add('active');
+                }
+            }
+        }
+
+        async function createPost() {
+            const title = document.getElementById('post-title').value.trim();
+            const content = document.getElementById('post-content').value.trim();
+            const imageInput = document.getElementById('post-image');
+            const msg = document.getElementById('post-message');
+
+            if (!title || !content) {
+                msg.innerHTML = '<div class="error">Заполните заголовок и текст</div>';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('content', content);
+            if (imageInput.files[0]) {
+                formData.append('image', imageInput.files[0]);
+            }
+
+            try {
+                const res = await fetch(API_URL + '/posts/', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    msg.innerHTML = '<div class="success">Новость опубликована!</div>';
+                    document.getElementById('post-title').value = '';
+                    document.getElementById('post-content').value = '';
+                    document.getElementById('post-image').value = '';
+                    loadPosts();
+                } else {
+                    msg.innerHTML = '<div class="error">' + formatError(data) + '</div>';
+                }
+            } catch (e) {
+                msg.innerHTML = '<div class="error">Ошибка: ' + e.message + '</div>';
+            }
+        }
+
+        async function loadPosts() {
+            const feed = document.getElementById('posts-feed');
+            feed.innerHTML = '<p style="color: var(--text-secondary);">Загрузка...</p>';
+
+            try {
+                const res = await fetch(API_URL + '/posts/?skip=0&limit=20');
+                const posts = await res.json();
+
+                if (!Array.isArray(posts) || posts.length === 0) {
+                    feed.innerHTML = '<div class="empty-state">Пока нет новостей. Будь первым!</div>';
+                    return;
+                }
+
+                const postsWithDetails = await Promise.all(posts.map(async function(post) {
+                    const [likesData, commentsData] = await Promise.all([
+                        fetch(API_URL + '/likes/post/' + post.id + '/count').then(r => r.json()),
+                        fetch(API_URL + '/comments/post/' + post.id).then(r => r.json())
+                    ]);
+
+                    return {
+                        ...post,
+                        likes_count: likesData.likes_count,
+                        comments: commentsData
+                    };
+                }));
+
+                feed.innerHTML = postsWithDetails.map(function(post) {
+                    return renderPost(post);
+                }).join('');
+            } catch (e) {
+                feed.innerHTML = '<div class="error">Ошибка загрузки новостей: ' + e.message + '</div>';
+            }
+        }
+
+        async function loadMyPosts() {
+            const feed = document.getElementById('my-posts');
+            feed.innerHTML = '<p style="color: var(--text-secondary);">Загрузка...</p>';
+
+            try {
+                const res = await fetch(API_URL + '/posts/?skip=0&limit=20');
+                const posts = await res.json();
+
+                const myPosts = posts.filter(function(post) {
+                    return post.author_username === currentUser;
+                });
+
+                if (myPosts.length === 0) {
+                    feed.innerHTML = '<div class="empty-state">У вас пока нет публикаций</div>';
+                    return;
+                }
+
+                const postsWithDetails = await Promise.all(myPosts.map(async function(post) {
+                    const [likesData, commentsData] = await Promise.all([
+                        fetch(API_URL + '/likes/post/' + post.id + '/count').then(r => r.json()),
+                        fetch(API_URL + '/comments/post/' + post.id).then(r => r.json())
+                    ]);
+
+                    return {
+                        ...post,
+                        likes_count: likesData.likes_count,
+                        comments: commentsData
+                    };
+                }));
+
+                feed.innerHTML = postsWithDetails.map(function(post) {
+                    return renderPost(post);
+                }).join('');
+            } catch (e) {
+                feed.innerHTML = '<div class="error">Ошибка загрузки публикаций: ' + e.message + '</div>';
+            }
+        }
+
+        function renderPost(post) {
+            const date = new Date(post.created_at).toLocaleString('ru-RU');
+
+            const normalizedPath = post.image_path ? post.image_path.replace(/\\/g, '/') : null;
+            const fullPath = normalizedPath ? '/' + normalizedPath : null;
+
+            const imageHtml = fullPath
+                ? '<img src="' + fullPath + '" class="post-image" alt="Изображение" onclick="openLightbox(\'' + fullPath + '\', \'' + escapeHtml(post.title).replace(/'/g, "\\'") + '\')">'
+                : '';
+
+            const commentsHtml = post.comments.map(function(comment) {
+                const commentDate = new Date(comment.created_at).toLocaleString('ru-RU');
+                const authorName = comment.author_username || 'Пользователь #' + comment.author_id;
+                const authorInitial = authorName[0].toUpperCase();
+                return '<div class="comment">' +
+                    '<div class="comment-avatar">' + authorInitial + '</div>' +
+                    '<div class="comment-content">' +
+                        '<div class="comment-author">' + escapeHtml(authorName) + '</div>' +
+                        '<div class="comment-text">' + escapeHtml(comment.text) + '</div>' +
+                        '<div class="comment-date">' + commentDate + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+
+            const authorInitial = (post.author_username || 'U')[0].toUpperCase();
+            const isOwner = post.author_username === currentUser;
+
+            // Кнопки редактирования и удаления только для владельца поста
+            const ownerActions = isOwner ?
+                '<button class="action-btn edit-btn" onclick="openEditModal(' + post.id + ', \'' + escapeHtml(post.title).replace(/'/g, "\\'") + '\', \'' + escapeHtml(post.content).replace(/'/g, "\\'").replace(/\n/g, '\\n') + '\')">✏️ Редактировать</button>' +
+                '<button class="action-btn delete-btn" onclick="openDeleteModal(' + post.id + ')">🗑️ Удалить</button>'
+                : '';
+
+            return '<div class="post" data-post-id="' + post.id + '">' +
+                '<div class="post-header">' +
+                    '<div class="post-avatar">' + authorInitial + '</div>' +
+                    '<div class="post-author-info">' +
+                        '<div class="post-author">' + (post.author_username || 'Пользователь #' + post.author_id) + '</div>' +
+                        '<div class="post-date">' + date + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="post-title">' + escapeHtml(post.title) + '</div>' +
+                '<div class="post-content">' + escapeHtml(post.content) + '</div>' +
+                imageHtml +
+                '<div class="post-actions">' +
+                    '<button class="action-btn" onclick="toggleLike(' + post.id + ')">❤️ ' + post.likes_count + '</button>' +
+                    '<button class="action-btn">💬 ' + post.comments.length + '</button>' +
+                    ownerActions +
+                '</div>' +
+                '<div class="comments-section">' +
+                    commentsHtml +
+                    '<div class="comment-form">' +
+                        '<input type="text" id="comment-input-' + post.id + '" placeholder="Написать комментарий...">' +
+                        '<button onclick="addComment(' + post.id + ')">Отправить</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }
+
+        async function toggleLike(postId) {
+            if (!token) return;
+
+            try {
+                let res = await fetch(API_URL + '/likes/post/' + postId, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (res.status === 400) {
+                    res = await fetch(API_URL + '/likes/post/' + postId, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                }
+
+                if (res.ok || res.status === 204) {
+                    loadPosts();
+                }
+            } catch (e) {
+                console.error('Ошибка лайка:', e);
+            }
+        }
+
+        async function addComment(postId) {
+            if (!token) return;
+
+            const input = document.getElementById('comment-input-' + postId);
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            try {
+                const res = await fetch(API_URL + '/comments/?post_id=' + postId, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                if (res.ok) {
+                    input.value = '';
+                    loadPosts();
+                } else {
+                    const data = await res.json();
+                    alert(formatError(data));
+                }
+            } catch (e) {
+                console.error('Ошибка комментария:', e);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
 </body>

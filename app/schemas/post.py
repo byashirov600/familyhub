@@ -15,6 +15,7 @@ class PostResponse(BaseModel):
     image_path: Optional[str] = None
     created_at: datetime
     author_id: int
+    author_username: Optional[str] = None
 
     class Config:
         from_attributes = True

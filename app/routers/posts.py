@@ -49,12 +49,31 @@ async def create_post(
     return new_post
 
 
-@router.get("/posts", response_model=list[PostResponse])
+@router.get("/", response_model=list[PostResponse])
 async def get_posts(skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Post).order_by(Post.created_at.desc()).offset(skip).limit(limit)
     )
-    return result.scalars().all()
+    posts = result.scalars().all()
+
+    # Добавляем username автора
+    response = []
+    for post in posts:
+        author_result = await db.execute(select(User).where(User.id == post.author_id))
+        author = author_result.scalar_one_or_none()
+
+        post_dict = {
+            "id": post.id,
+            "title": post.title,
+            "content": post.content,
+            "image_path": post.image_path,
+            "created_at": post.created_at,
+            "author_id": post.author_id,
+            "author_username": author.username if author else "Unknown"
+        }
+        response.append(post_dict)
+
+    return response
 
 @router.get("/{post_id}", response_model=PostResponse)
 async def get_post(post_id: int, db: AsyncSession = Depends(get_db)):

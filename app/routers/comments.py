@@ -53,7 +53,24 @@ async def get_post_comments(
         .order_by(Comment.created_at.desc())
     )
     comments = result.scalars().all()
-    return comments
+
+    # Добавляем username автора
+    response = []
+    for comment in comments:
+        author_result = await db.execute(select(User).where(User.id == comment.author_id))
+        author = author_result.scalar_one_or_none()
+
+        comment_dict = {
+            "id": comment.id,
+            "text": comment.text,
+            "created_at": comment.created_at,
+            "post_id": comment.post_id,
+            "author_id": comment.author_id,
+            "author_username": author.username if author else "Unknown"
+        }
+        response.append(comment_dict)
+
+    return response
 
 
 @router.delete("/{comment_id}", status_code=204)
