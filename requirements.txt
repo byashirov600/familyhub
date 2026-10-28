@@ -12,3 +12,4 @@ email-validator
 python-multipart
 python-jose[cryptography]
 greenlet
+httpx

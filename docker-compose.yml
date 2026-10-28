@@ -1,12 +1,10 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15
     container_name: familyhub_db
     environment:
       POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: postgres600
       POSTGRES_DB: familyhub_db
     ports:
       - "5432:5432"
@@ -24,14 +22,24 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+asyncpg://user:password@postgres:5432/familyhub_db
+      DATABASE_URL: postgresql+asyncpg://user:postgres600@postgres:5432/familyhub_db
       SECRET_KEY: super_secret_key_for_jwt_change_me
     volumes:
-      - ./uploads:/app/uploads  # Чтобы картинки сохранялись на хосте
+      - ./uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: familyhub_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
 volumes:
   pgdata:
+  ollama_data:

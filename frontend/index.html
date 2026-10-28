@@ -155,7 +155,12 @@
                     <div class="content-inner">
                         <div class="create-post-form">
                             <input type="text" id="post-title" placeholder="Заголовок новости">
-                            <textarea id="post-content" placeholder="Что нового?"></textarea>
+                            <textarea id="post-content" placeholder="Что нового? (Напишите черновик, а ИИ поможет его улучшить)"></textarea>
+
+                            <!-- КНОПКА ИИ -->
+                            <button type="button" class="btn-ai" onclick="improvePostText()">✨ Улучшить текст с ИИ</button>
+                            <div id="ai-message" style="margin-top: 10px;"></div>
+
                             <input type="file" id="post-image" accept="image/*">
                             <div id="post-message"></div>
                             <button class="btn" onclick="createPost()">Опубликовать</button>
@@ -169,12 +174,12 @@
             <div id="page-friends" class="page">
                 <div class="content-header">
                     <h2>Друзья</h2>
-                    <button class="btn-add-friend" onclick="showAddFriendModal()">➕ Добавить друга</button>
+                    <button class="btn-add-friend" onclick="showAddFriendModal()"> Добавить друга</button>
                 </div>
                 <div class="content-body">
                     <div class="content-inner">
                         <div class="friends-tabs">
-                            <button class="tab-btn active" onclick="switchFriendsTab('friends', this)">👥 Мои друзья</button>
+                            <button class="tab-btn active" onclick="switchFriendsTab('friends', this)"> Мои друзья</button>
                             <button class="tab-btn" onclick="switchFriendsTab('requests', this)">📨 Запросы <span id="requests-badge" class="badge"></span></button>
                         </div>
 
@@ -287,7 +292,7 @@
 
     <div class="modal-overlay" id="delete-message-modal">
         <div class="confirm-dialog">
-            <h3>️ Удалить сообщение?</h3>
+            <h3>🗑️ Удалить сообщение?</h3>
             <p>Это действие нельзя отменить.</p>
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="closeDeleteMessageModal()">Отмена</button>
@@ -322,7 +327,7 @@
     <!-- Модалка добавления друга -->
     <div class="modal-overlay" id="add-friend-modal">
         <div class="modal" style="max-width: 400px;">
-            <h3>➕ Добавить друга</h3>
+            <h3> Добавить друга</h3>
             <p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 14px;">
                 Введите ID пользователя:
             </p>
