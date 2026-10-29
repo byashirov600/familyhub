@@ -1,76 +1,102 @@
-#  FamilyHub API
+#  FamilyHub
 
-Полноценный async REST API для семейной социальной сети с аутентификацией, лентой постов, комментариями, лайками и Docker-контейнеризацией.
+Полноценная семейная социальная сеть с асинхронным REST API, мессенджером, системой друзей и встроенным ИИ-помощником для улучшения контента.
 
-![Python](https://img.shields.io/badge/Python-3.13-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql)
-![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker)
-![License](https://img.shields.io/badge/License-MIT-green)
+Проект демонстрирует переход от монолитной архитектуры к современному асинхронному стеку с контейнеризацией и интеграцией локальных LLM.
 
-##  О проекте
+---
 
-FamilyHub — это backend для семейной социальной сети, где члены семьи могут делиться фотографиями, новостями и общаться. Проект демонстрирует навыки современной backend-разработки: асинхронность, контейнеризация, REST API, JWT-аутентификация.
+##  Ключевые возможности
 
-## ✨ Возможности
+-  **Безопасная аутентификация**: JWT-токены, хеширование паролей (bcrypt), защита маршрутов.
+-  **Лента публикаций**: CRUD постов с загрузкой изображений, система лайков и комментариев.
+-  **Полноценный мессенджер**: Личные чаты с поддержкой текстовых сообщений, вложений (файлы/изображения) и голосовых сообщений.
+-  **Система друзей**: Отправка запросов, принятие/отклонение, управление списком контактов.
+-  **Профили пользователей**: Аватарки, обложки, биография, статус онлайн/оффлайн с отслеживанием активности.
+-  **ИИ-помощник (New!)**: Интеграция локальной LLM (Ollama + Llama 3 / Qwen 2.5) для интеллектуального улучшения и редактирования текстов постов прямо в интерфейсе.
+-  **Кастомизация**: 6 цветовых тем оформления и адаптивный frontend.
 
--  **JWT-аутентификация** — безопасная регистрация и вход с хешированием паролей (bcrypt)
-- 📝 **CRUD постов** — создание, чтение, обновление, удаление постов с загрузкой изображений
-- 💬 **Комментарии и лайки** — интерактивность с защитой от дубликатов
-- 🐳 **Docker Compose** — запуск приложения и PostgreSQL одной командой
-- ⚡ **Асинхронность** — FastAPI + asyncpg для высокой производительности
-- 🛡️ **Валидация данных** — Pydantic V2 с типизацией
+---
 
-## 🛠️ Технологический стек
+##  Технологический стек
 
 | Категория | Технологии |
-|-----------|-----------|
-| Язык | Python 3.13 |
-| Фреймворк | FastAPI |
-| База данных | PostgreSQL 15 |
-| ORM | SQLAlchemy (async) |
-| Контейнеризация | Docker, Docker Compose |
-| Аутентификация | JWT (python-jose) |
-| Хеширование | passlib + bcrypt |
+| :--- | :--- |
+| **Backend** | Python 3.13, FastAPI, Pydantic V2, Asyncio |
+| **База данных** | PostgreSQL 15, SQLAlchemy (async), asyncpg |
+| **ИИ / LLM** | Ollama, Llama 3 / Qwen 2.5, кастомный харнес на `httpx` |
+| **Frontend** | HTML5, CSS3 (CSS Variables, Flexbox), Vanilla JavaScript (ES6+) |
+| **Инфраструктура** | Docker, Docker Compose, Nginx (статика) |
+| **Инструменты** | Git, GitHub, Postman, Swagger UI |
+
+---
 
 ## 📂 Структура проекта
-```
+
+```text
 familyhub/
 ├── app/
-│ ├── models/ # SQLAlchemy модели (User, Post, Comment, Like)
-│ ├── schemas/ # Pydantic схемы для валидации запросов/ответов
-│ ├── routers/ # API эндпоинты (auth, users, posts, comments, likes)
-│ ├── database.py # Асинхронное подключение к PostgreSQL
-│ ├── config.py # Управление переменными окружения (pydantic-settings)
-│ ├── utils.py # Утилиты (хеширование паролей, JWT)
-│ └── main.py # Точка входа приложения
-├── uploads/ # Директория для загруженных изображений
-├── docker-compose.yml # Оркестрация контейнеров (App + PostgreSQL)
-├── Dockerfile # Инструкции для сборки образа приложения
-├── requirements.txt # Зависимости Python
-└── .env.example # Шаблон переменных окружения
+│   ├── models/         # SQLAlchemy модели (User, Post, Comment, Friendship, Message)
+│   ├── schemas/        # Pydantic схемы для валидации данных
+│   ├── routers/        # API эндпоинты (auth, users, posts, friends, messages, ai)
+│   ├── database.py     # Асинхронное подключение к БД и управление сессиями
+│   ├── config.py       # Управление переменными окружения (pydantic-settings)
+│   └── main.py         # Точка входа, регистрация роутеров и middleware
+├── frontend/           # Статический клиент (index.html, style.css, script.js)
+├── uploads/            # Директория для пользовательских файлов (аватары, посты, голосовые)
+├── docker-compose.yml  # Оркестрация сервисов (App, PostgreSQL, Ollama)
+├── Dockerfile          # Инструкции для сборки backend-образа
+├── requirements.txt    # Зависимости Python
+└── .env.example        # Шаблон переменных окружения
 ```
 
-## 🚀 Быстрый старт
+---
+
+##  Быстрый старт
 
 ### Предварительные требования
-- [Docker](https://www.docker.com/products/docker-desktop/) и Docker Compose
-- Python 3.13+ (для локального запуска)
+- Установленные Docker и Docker Compose
 
-1. Клонируйте репозиторий
+### 1. Клонирование репозитория
 ```bash
 git clone https://github.com/byashirov600/familyhub.git
 cd familyhub
 ```
-2. Настройте окружение
-Создайте файл .env на основе .env.example:```
+
+### 2. Настройка окружения
+Создайте файл `.env` на основе шаблона:
+```bash
 cp .env.example .env
-Отредактируйте .env и задайте свой SECRET_KEY:
-DATABASE_URL=postgresql+asyncpg://user:password@postgres:5432/familyhub_db
-SECRET_KEY=ваш_случайный_секретный_ключ ```
-3. Запустите через Docker Compose
-docker-compose up --build
-Приложение будет доступно по адресу: http://127.0.0.1:8000
-4. Откройте документацию API
-Интерактивная Swagger UI документация:
-👉 http://127.0.0.1:8000/docs ```
+```
+*Убедитесь, что `DATABASE_URL` и `SECRET_KEY` корректно настроены.*
+
+### 3. Запуск через Docker Compose
+```bash
+docker-compose up --build -d
+```
+*При первом запуске рекомендуется загрузить ИИ-модель:*
+```bash
+docker exec -it familyhub_ollama ollama pull llama3:8b
+```
+
+### 4. Проверка работы
+- **Frontend**: http://127.0.0.1:8000/static/index.html
+- **API Документация (Swagger)**: http://127.0.0.1:8000/docs
+
+---
+
+## 🧠 Архитектурные решения и вызовы
+
+1. **Асинхронная архитектура**: Полный переход на `async/await` (FastAPI + asyncpg) для неблокирующего ввода-вывода, что критично для мессенджера и работы с ИИ.
+2. **Кастомный ИИ-харнес**: Вместо тяжелых фреймворков (LangChain) реализован легковесный асинхронный клиент на `httpx` со строгими системными промптами для контроля галлюцинаций модели.
+3. **Оптимизация фронтенда**: Реализован механизм cache-busting (`?t=timestamp`) для мгновенного обновления аватарок и обложек без перезагрузки страницы.
+4. **Безопасность**: Валидация всех входящих данных через Pydantic, защита от SQL-инъекций через ORM, безопасное хранение паролей.
+
+---
+
+## 👤 Автор
+
+**Эрик Бяширов**  
+Python Backend Developer  
+📧 byashirov-erik@mail.ru | ✈️ Telegram: [@maverrrik](https://t.me/maverrrik)  
+*Инженер по образованию, разработчик по призванию. Создаю масштабируемые и практичные решения.*
